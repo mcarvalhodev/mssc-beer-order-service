@@ -24,7 +24,7 @@ import org.mapstruct.Mapper;
 @Mapper(uses = {DateMapper.class, BeerOrderLineMapper.class})
 public interface BeerOrderMapper {
 
-    BeerOrderDto beerOrderToDto(BeerOrder beerOrder);
+  BeerOrderDto beerOrderToDto(BeerOrder beerOrder);
 
-    BeerOrder dtoToBeerOrder(BeerOrderDto dto);
+  BeerOrder dtoToBeerOrder(BeerOrderDto dto);
 }

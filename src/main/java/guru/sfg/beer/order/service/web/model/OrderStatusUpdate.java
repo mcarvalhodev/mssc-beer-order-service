@@ -30,16 +30,21 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public class OrderStatusUpdate extends BaseItem {
 
-    @Builder
-    public OrderStatusUpdate(UUID id, Integer version, OffsetDateTime createdDate, OffsetDateTime lastModifiedDate,
-                             UUID orderId, String orderStatus, String customerRef) {
-        super(id, version, createdDate, lastModifiedDate);
-        this.orderId = orderId;
-        this.orderStatus = orderStatus;
-        this.customerRef = customerRef;
-    }
-
-    private UUID orderId;
-    private String customerRef;
-    private String orderStatus;
+  private UUID orderId;
+  private String customerRef;
+  private String orderStatus;
+  @Builder
+  public OrderStatusUpdate(
+      UUID id,
+      Integer version,
+      OffsetDateTime createdDate,
+      OffsetDateTime lastModifiedDate,
+      UUID orderId,
+      String orderStatus,
+      String customerRef) {
+    super(id, version, createdDate, lastModifiedDate);
+    this.orderId = orderId;
+    this.orderStatus = orderStatus;
+    this.customerRef = customerRef;
+  }
 }
