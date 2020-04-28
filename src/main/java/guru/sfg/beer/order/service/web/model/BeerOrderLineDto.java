@@ -33,17 +33,20 @@ public class BeerOrderLineDto extends BaseItem {
   private String upc;
   private String beerName;
   private UUID beerId;
-  private Integer orderQuantity = 0;
+    private String beerStyle;
+    private Integer orderQuantity = 0;
+
   @Builder
   public BeerOrderLineDto(
-      UUID id,
-      Integer version,
-      OffsetDateTime createdDate,
-      OffsetDateTime lastModifiedDate,
-      String upc,
-      String beerName,
-      UUID beerId,
-      Integer orderQuantity) {
+          UUID id,
+          Integer version,
+          OffsetDateTime createdDate,
+          OffsetDateTime lastModifiedDate,
+          String upc,
+          String beerName,
+          UUID beerId,
+          String beerStyle,
+          Integer orderQuantity) {
     super(id, version, createdDate, lastModifiedDate);
     this.upc = upc;
     this.beerName = beerName;
