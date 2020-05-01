@@ -20,6 +20,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -28,7 +29,9 @@ import java.sql.Timestamp;
 import java.util.Set;
 import java.util.UUID;
 
-/** Created by jt on 2019-01-26. */
+/**
+ * Created by jt on 2019-01-26.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,17 +39,18 @@ import java.util.UUID;
 public class Customer extends BaseEntity {
 
   private String customerName;
-  @Column(length = 36, columnDefinition = "varchar")
+  @Type(type = "org.hibernate.type.UUIDCharType")
+  @Column(length = 36, columnDefinition = "varchar(36)")
   private UUID apiKey;
   @OneToMany(mappedBy = "customer")
   private Set<BeerOrder> beerOrders;
 
   @Builder
   public Customer(
-      UUID id,
-      Long version,
-      Timestamp createdDate,
-      Timestamp lastModifiedDate,
+          UUID id,
+          Long version,
+          Timestamp createdDate,
+          Timestamp lastModifiedDate,
       String customerName,
       UUID apiKey,
       Set<BeerOrder> beerOrders) {
