@@ -41,10 +41,13 @@ public class BaseEntity {
   @Type(type = "org.hibernate.type.UUIDCharType")
   @Column(length = 36, columnDefinition = "varchar(36)", updatable = false, nullable = false)
   private UUID id;
+
   @Version private Long version;
+
   @CreationTimestamp
   @Column(updatable = false)
   private Timestamp createdDate;
+
   @UpdateTimestamp private Timestamp lastModifiedDate;
 
   public BaseEntity(UUID id, Long version, Timestamp createdDate, Timestamp lastModifiedDate) {
