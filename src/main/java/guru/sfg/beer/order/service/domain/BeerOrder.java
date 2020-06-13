@@ -39,23 +39,27 @@ import java.util.UUID;
 public class BeerOrder extends BaseEntity {
 
   private String customerRef;
-  @ManyToOne private Customer customer;
+  @ManyToOne
+  private Customer customer;
+
   @OneToMany(mappedBy = "beerOrder", cascade = CascadeType.ALL)
   @Fetch(FetchMode.JOIN)
   private Set<BeerOrderLine> beerOrderLines;
-  private OrderStatusEnum orderStatus = OrderStatusEnum.NEW;
+
+  private BeerOrderStatusEnum orderStatus = BeerOrderStatusEnum.NEW;
   private String orderStatusCallbackUrl;
+
   @Builder
   public BeerOrder(
-      UUID id,
-      Long version,
-      Timestamp createdDate,
-      Timestamp lastModifiedDate,
-      String customerRef,
-      Customer customer,
-      Set<BeerOrderLine> beerOrderLines,
-      OrderStatusEnum orderStatus,
-      String orderStatusCallbackUrl) {
+          UUID id,
+          Long version,
+          Timestamp createdDate,
+          Timestamp lastModifiedDate,
+          String customerRef,
+          Customer customer,
+          Set<BeerOrderLine> beerOrderLines,
+          BeerOrderStatusEnum orderStatus,
+          String orderStatusCallbackUrl) {
     super(id, version, createdDate, lastModifiedDate);
     this.customerRef = customerRef;
     this.customer = customer;
