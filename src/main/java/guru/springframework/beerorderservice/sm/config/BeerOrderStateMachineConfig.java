@@ -2,7 +2,9 @@ package guru.springframework.beerorderservice.sm.config;
 
 import guru.springframework.beerorderservice.domain.BeerOrderEventEnum;
 import guru.springframework.beerorderservice.domain.BeerOrderStatusEnum;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
@@ -10,10 +12,13 @@ import org.springframework.statemachine.config.builders.StateMachineTransitionCo
 
 import java.util.EnumSet;
 
+@RequiredArgsConstructor
 @Configuration
 @EnableStateMachineFactory
 public class BeerOrderStateMachineConfig
     extends StateMachineConfigurerAdapter<BeerOrderStatusEnum, BeerOrderEventEnum> {
+
+  private final Action<BeerOrderStatusEnum, BeerOrderEventEnum> validateOrder;
 
   @Override
   public void configure(StateMachineStateConfigurer<BeerOrderStatusEnum, BeerOrderEventEnum> states)
@@ -37,6 +42,7 @@ public class BeerOrderStateMachineConfig
         .source(BeerOrderStatusEnum.NEW)
         .target(BeerOrderStatusEnum.VALIDATION_PENDING)
         .event(BeerOrderEventEnum.VALIDATE_ORDER)
+        .action(validateOrder)
         .and()
         .withExternal()
         .source(BeerOrderStatusEnum.NEW)
