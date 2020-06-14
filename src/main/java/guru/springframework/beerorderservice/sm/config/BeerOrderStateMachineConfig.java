@@ -1,4 +1,4 @@
-package guru.springframework.beerorderservice.sm;
+package guru.springframework.beerorderservice.sm.config;
 
 import guru.springframework.beerorderservice.domain.BeerOrderEventEnum;
 import guru.springframework.beerorderservice.domain.BeerOrderStatusEnum;
@@ -35,7 +35,7 @@ public class BeerOrderStateMachineConfig
     transitions
         .withExternal()
         .source(BeerOrderStatusEnum.NEW)
-        .target(BeerOrderStatusEnum.NEW)
+        .target(BeerOrderStatusEnum.VALIDATION_PENDING)
         .event(BeerOrderEventEnum.VALIDATE_ORDER)
         .and()
         .withExternal()
