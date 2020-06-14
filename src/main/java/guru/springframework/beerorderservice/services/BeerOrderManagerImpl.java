@@ -5,6 +5,7 @@ import guru.springframework.beerorderservice.domain.BeerOrderEventEnum;
 import guru.springframework.beerorderservice.domain.BeerOrderStatusEnum;
 import guru.springframework.beerorderservice.repositories.BeerOrderRepository;
 import guru.springframework.beerorderservice.sm.StateMachineService;
+import guru.springframework.beerorderservice.util.BeerOrderConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -30,7 +31,10 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
   private void sendEvent(BeerOrder order, BeerOrderEventEnum event) {
     StateMachine<BeerOrderStatusEnum, BeerOrderEventEnum> stateMachine =
         stateMachineService.acquireStateMachine(order);
-    Message<BeerOrderEventEnum> message = MessageBuilder.withPayload(event).build();
+    Message<BeerOrderEventEnum> message =
+        MessageBuilder.withPayload(event)
+            .setHeader(BeerOrderConstants.ORDER_ID_HEADER, order.getId().toString())
+            .build();
     stateMachine.sendEvent(message);
   }
 }
