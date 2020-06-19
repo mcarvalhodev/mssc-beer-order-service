@@ -1,5 +1,6 @@
 package guru.springframework.beerorderservice.services;
 
+import guru.springframework.beerorderservice.brewery.model.events.ValidateOrderResponse;
 import guru.springframework.beerorderservice.domain.BeerOrder;
 import guru.springframework.beerorderservice.domain.BeerOrderEventEnum;
 import guru.springframework.beerorderservice.domain.BeerOrderStatusEnum;
@@ -26,6 +27,16 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     BeerOrder order = beerOrderRepository.save(entity);
     sendEvent(order, BeerOrderEventEnum.VALIDATE_ORDER);
     return order;
+  }
+
+  @Override
+  public void handle(ValidateOrderResponse response) {
+    final BeerOrder order = beerOrderRepository.getOne(response.getOrderId());
+    sendEvent(
+        order,
+        response.isValid()
+            ? BeerOrderEventEnum.VALIDATION_PASSED
+            : BeerOrderEventEnum.VALIDATION_FAILED);
   }
 
   private void sendEvent(BeerOrder order, BeerOrderEventEnum event) {
