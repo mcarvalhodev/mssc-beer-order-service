@@ -37,6 +37,9 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
         response.isValid()
             ? BeerOrderEventEnum.VALIDATION_PASSED
             : BeerOrderEventEnum.VALIDATION_FAILED);
+    if (response.isValid()) {
+      sendEvent(beerOrderRepository.findOneById(order.getId()), BeerOrderEventEnum.ALLOCATE_ORDER);
+    }
   }
 
   private void sendEvent(BeerOrder order, BeerOrderEventEnum event) {
