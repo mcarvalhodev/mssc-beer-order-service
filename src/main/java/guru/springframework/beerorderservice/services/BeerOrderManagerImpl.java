@@ -1,5 +1,6 @@
 package guru.springframework.beerorderservice.services;
 
+import guru.springframework.beerorderservice.brewery.model.AllocateOrderResponse;
 import guru.springframework.beerorderservice.brewery.model.events.ValidateOrderResponse;
 import guru.springframework.beerorderservice.domain.BeerOrder;
 import guru.springframework.beerorderservice.domain.BeerOrderEventEnum;
@@ -12,6 +13,8 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Consumer;
 
 @RequiredArgsConstructor
 @Component
@@ -40,6 +43,21 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     if (response.isValid()) {
       sendEvent(beerOrderRepository.findOneById(order.getId()), BeerOrderEventEnum.ALLOCATE_ORDER);
     }
+  }
+
+  @Override
+  public Consumer<AllocateOrderResponse> onAllocationResult() {
+    return message -> {
+      final BeerOrder order = beerOrderRepository.getOne(message.getOrder().getId());
+      BeerOrderEventEnum event =
+          message.isAllocationError()
+              ? BeerOrderEventEnum.ALLOCATION_FAILED
+              : message.isPendingInventory()
+                  ? BeerOrderEventEnum.ALLOCATION_NO_INVENTORY
+                  : BeerOrderEventEnum.ALLOCATION_SUCCESS;
+
+      sendEvent(order, event);
+    };
   }
 
   private void sendEvent(BeerOrder order, BeerOrderEventEnum event) {

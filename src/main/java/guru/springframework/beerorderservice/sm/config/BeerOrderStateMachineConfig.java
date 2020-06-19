@@ -59,6 +59,21 @@ public class BeerOrderStateMachineConfig
         .source(BeerOrderStatusEnum.VALIDATED)
         .target(BeerOrderStatusEnum.ALLOCATION_PENDING)
         .event(BeerOrderEventEnum.VALIDATE_ORDER)
-        .action(allocateOrder);
+        .action(allocateOrder)
+        .and()
+        .withExternal()
+        .source(BeerOrderStatusEnum.ALLOCATION_PENDING)
+        .target(BeerOrderStatusEnum.ALLOCATED)
+        .event(BeerOrderEventEnum.ALLOCATION_SUCCESS)
+        .and()
+        .withExternal()
+        .source(BeerOrderStatusEnum.ALLOCATION_PENDING)
+        .target(BeerOrderStatusEnum.ALLOCATION_EXCEPTION)
+        .event(BeerOrderEventEnum.ALLOCATION_FAILED)
+        .and()
+        .withExternal()
+        .source(BeerOrderStatusEnum.ALLOCATION_PENDING)
+        .target(BeerOrderStatusEnum.PENDING_INVENTORY)
+        .event(BeerOrderEventEnum.ALLOCATION_NO_INVENTORY);
   }
 }
