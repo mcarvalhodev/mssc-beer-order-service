@@ -14,7 +14,6 @@ import guru.springframework.beerorderservice.domain.model.order.BeerOrderLine;
 import guru.springframework.beerorderservice.domain.model.order.BeerOrderRepository;
 import guru.springframework.beerorderservice.domain.model.order.BeerOrderStatusEnum;
 import guru.springframework.beerorderservice.interfaces.rest.model.BeerDto;
-import guru.springframework.beerorderservice.interfaces.rest.model.BeerPagedList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +22,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -74,7 +72,6 @@ public class BeerOrderManagerIntegrationTest {
   void testNewToAllocate() throws JsonProcessingException, InterruptedException {
 
     final BeerDto beerDto = BeerDto.builder().id(beerId).upc(1234L).build();
-    final BeerPagedList pagedList = new BeerPagedList(Collections.singletonList(beerDto));
 
     wireMockServer.stubFor(
         get("http://localhost:8080" + BeerServiceImpl.BEER_UPC_PATH_V1 + "1234")
@@ -94,7 +91,6 @@ public class BeerOrderManagerIntegrationTest {
   @Test
   public void testNewToPickedUp() throws JsonProcessingException {
     final BeerDto beerDto = BeerDto.builder().id(beerId).upc(1234L).build();
-    final BeerPagedList pagedList = new BeerPagedList(Collections.singletonList(beerDto));
 
     wireMockServer.stubFor(
         get("http://localhost:8080" + BeerServiceImpl.BEER_UPC_PATH_V1 + "1234")
@@ -121,6 +117,29 @@ public class BeerOrderManagerIntegrationTest {
     assertEquals(
         BeerOrderStatusEnum.PICKED_UP,
         orderRepository.findById(order.getId()).get().getOrderStatus());
+  }
+
+  @Test
+  void testFailedValidation() throws JsonProcessingException {
+    final BeerDto beerDto = BeerDto.builder().id(beerId).upc(1234L).build();
+
+    wireMockServer.stubFor(
+        get("http://localhost:8080" + BeerServiceImpl.BEER_UPC_PATH_V1 + "1234")
+            .willReturn(okJson(objectMapper.writeValueAsString(beerDto))));
+
+    BeerOrder newly = newOne();
+    newly.setCustomerRef("fail-validation");
+
+    final BeerOrder order = beerOrderManager.create(newly);
+
+    assertNotNull(order);
+
+    await()
+        .untilAsserted(
+            () -> {
+              final BeerOrder beerOrder = orderRepository.findById(order.getId()).get();
+              assertEquals(BeerOrderStatusEnum.VALIDATION_EXCEPTION, beerOrder.getOrderStatus());
+            });
   }
 
   public BeerOrder newOne() {
