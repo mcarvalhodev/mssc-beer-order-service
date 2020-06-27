@@ -20,6 +20,7 @@ public class BeerOrderStateMachineConfig
 
   private final Action<BeerOrderStatusEnum, BeerOrderEventEnum> validateOrder;
   private final Action<BeerOrderStatusEnum, BeerOrderEventEnum> allocateOrder;
+  private final Action<BeerOrderStatusEnum, BeerOrderEventEnum> validationFailure;
 
   @Override
   public void configure(StateMachineStateConfigurer<BeerOrderStatusEnum, BeerOrderEventEnum> states)
@@ -59,7 +60,7 @@ public class BeerOrderStateMachineConfig
         .source(BeerOrderStatusEnum.VALIDATION_PENDING)
         .target(BeerOrderStatusEnum.VALIDATION_EXCEPTION)
         .event(BeerOrderEventEnum.VALIDATION_FAILED)
-        // .action(validationFailureAction)
+        .action(validationFailure)
         .and()
         .withExternal()
         .source(BeerOrderStatusEnum.VALIDATED)
