@@ -1,8 +1,8 @@
 package guru.springframework.beerorderservice.services.listeners;
 
-import guru.springframework.beerorderservice.brewery.model.events.ValidateOrderResponse;
-import guru.springframework.beerorderservice.config.JmsConfig;
-import guru.springframework.beerorderservice.services.BeerOrderManager;
+import guru.springframework.beerorderservice.application.BeerOrderManager;
+import guru.springframework.beerorderservice.domain.event.ValidateOrderResponse;
+import guru.springframework.beerorderservice.infrastructure.jms.JmsConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.annotation.JmsListener;

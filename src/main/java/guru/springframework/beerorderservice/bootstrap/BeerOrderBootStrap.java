@@ -1,7 +1,7 @@
 package guru.springframework.beerorderservice.bootstrap;
 
-import guru.springframework.beerorderservice.domain.Customer;
-import guru.springframework.beerorderservice.repositories.CustomerRepository;
+import guru.springframework.beerorderservice.domain.model.customer.Customer;
+import guru.springframework.beerorderservice.domain.model.customer.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;

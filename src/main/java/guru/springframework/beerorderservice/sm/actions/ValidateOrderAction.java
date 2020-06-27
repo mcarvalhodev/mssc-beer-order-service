@@ -1,13 +1,13 @@
 package guru.springframework.beerorderservice.sm.actions;
 
-import guru.springframework.beerorderservice.brewery.model.events.ValidateOrderRequest;
-import guru.springframework.beerorderservice.config.JmsConfig;
-import guru.springframework.beerorderservice.domain.BeerOrder;
-import guru.springframework.beerorderservice.domain.BeerOrderEventEnum;
-import guru.springframework.beerorderservice.domain.BeerOrderStatusEnum;
-import guru.springframework.beerorderservice.repositories.BeerOrderRepository;
+import guru.springframework.beerorderservice.domain.event.ValidateOrderRequest;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrder;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrderEventEnum;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrderRepository;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrderStatusEnum;
+import guru.springframework.beerorderservice.infrastructure.jms.JmsConfig;
 import guru.springframework.beerorderservice.sm.support.OrderContextSupport;
-import guru.springframework.beerorderservice.web.mappers.BeerOrderMapper;
+import guru.springframework.beerorderservice.web.order.BeerOrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.core.JmsTemplate;
@@ -24,13 +24,13 @@ public class ValidateOrderAction implements Action<BeerOrderStatusEnum, BeerOrde
 
   private final BeerOrderRepository beerOrderRepository;
   private final JmsTemplate jmsTemplate;
-  private BeerOrderMapper beerOrderMapper;
+  private final BeerOrderMapper beerOrderMapper;
 
   @Override
   public void execute(StateContext<BeerOrderStatusEnum, BeerOrderEventEnum> stateContext) {
 
     UUID uuid = OrderContextSupport.getOrderIdHeader(stateContext);
-    BeerOrder order = beerOrderRepository.findOneById(uuid);
+    BeerOrder order = beerOrderRepository.findById(uuid).get();
     jmsTemplate.convertAndSend(
         JmsConfig.VALIDATE_ORDER_QUEUE,
         ValidateOrderRequest.builder().order(beerOrderMapper.beerOrderToDto(order)).build());

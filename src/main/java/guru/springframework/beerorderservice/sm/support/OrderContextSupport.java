@@ -1,8 +1,8 @@
 package guru.springframework.beerorderservice.sm.support;
 
-import guru.springframework.beerorderservice.domain.BeerOrderEventEnum;
-import guru.springframework.beerorderservice.domain.BeerOrderStatusEnum;
-import guru.springframework.beerorderservice.util.BeerOrderConstants;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrderConstants;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrderEventEnum;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrderStatusEnum;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateContext;
 

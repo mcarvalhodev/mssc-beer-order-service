@@ -1,10 +1,6 @@
 package guru.springframework.beerorderservice.sm.interceptors;
 
-import guru.springframework.beerorderservice.domain.BeerOrder;
-import guru.springframework.beerorderservice.domain.BeerOrderEventEnum;
-import guru.springframework.beerorderservice.domain.BeerOrderStatusEnum;
-import guru.springframework.beerorderservice.repositories.BeerOrderRepository;
-import guru.springframework.beerorderservice.util.BeerOrderConstants;
+import guru.springframework.beerorderservice.domain.model.order.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.StateMachine;
@@ -39,8 +35,7 @@ public class BeerOrderStateChangeInterceptor
                         .get(BeerOrderConstants.ORDER_ID_HEADER, String.class)))
         .ifPresent(
             orderId -> {
-              BeerOrder beerOrder =
-                  beerOrderRepository.findById(UUID.fromString(orderId)).orElseThrow();
+              BeerOrder beerOrder = beerOrderRepository.findById(UUID.fromString(orderId)).get();
               beerOrder.setOrderStatus(state.getId());
               beerOrderRepository.saveAndFlush(beerOrder);
             });

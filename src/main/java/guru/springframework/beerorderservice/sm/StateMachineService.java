@@ -1,9 +1,9 @@
 package guru.springframework.beerorderservice.sm;
 
-import guru.springframework.beerorderservice.domain.BeerOrder;
-import guru.springframework.beerorderservice.domain.BeerOrderEventEnum;
-import guru.springframework.beerorderservice.domain.BeerOrderStatusEnum;
-import guru.springframework.beerorderservice.repositories.BeerOrderRepository;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrder;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrderEventEnum;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrderRepository;
+import guru.springframework.beerorderservice.domain.model.order.BeerOrderStatusEnum;
 import guru.springframework.beerorderservice.sm.interceptors.BeerOrderStateChangeInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.statemachine.StateMachine;
