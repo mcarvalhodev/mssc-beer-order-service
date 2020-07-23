@@ -6,6 +6,7 @@ import com.github.jenspiegsa.wiremockextension.ManagedWireMockServer;
 import com.github.jenspiegsa.wiremockextension.WireMockExtension;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import guru.springframework.beerorderservice.application.BeerOrderManager;
+import guru.springframework.beerorderservice.domain.event.AllocationFailedEvent;
 import guru.springframework.beerorderservice.domain.model.beer.BeerServiceImpl;
 import guru.springframework.beerorderservice.domain.model.customer.Customer;
 import guru.springframework.beerorderservice.domain.model.customer.CustomerRepository;
@@ -13,6 +14,7 @@ import guru.springframework.beerorderservice.domain.model.order.BeerOrder;
 import guru.springframework.beerorderservice.domain.model.order.BeerOrderLine;
 import guru.springframework.beerorderservice.domain.model.order.BeerOrderRepository;
 import guru.springframework.beerorderservice.domain.model.order.BeerOrderStatusEnum;
+import guru.springframework.beerorderservice.infrastructure.jms.JmsConfig;
 import guru.springframework.beerorderservice.interfaces.rest.model.BeerDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.jms.core.JmsTemplate;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,6 +33,7 @@ import static com.github.jenspiegsa.wiremockextension.ManagedWireMockServer.with
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -46,6 +50,8 @@ public class BeerOrderManagerIntegrationTest {
   @Autowired ObjectMapper objectMapper;
 
   @Autowired WireMockServer wireMockServer;
+
+  @Autowired JmsTemplate jms;
 
   Customer customer;
 
@@ -175,6 +181,12 @@ public class BeerOrderManagerIntegrationTest {
               final BeerOrder beerOrder = orderRepository.findById(order.getId()).get();
               assertEquals(BeerOrderStatusEnum.ALLOCATION_EXCEPTION, beerOrder.getOrderStatus());
             });
+
+    final AllocationFailedEvent event =
+        (AllocationFailedEvent) jms.receiveAndConvert(JmsConfig.ALLOCATE_FAILURE_QUEUE);
+
+    assertNotNull(event);
+    assertThat(event.getOrderId()).isEqualTo(order.getId());
   }
 
   @Test
