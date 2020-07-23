@@ -11,10 +11,11 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 @Slf4j
@@ -35,12 +36,9 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     return order;
   }
 
-  private final EntityManager entityManager;
-
   @Transactional
   @Override
   public void handle(ValidateOrderResponse response) {
-    entityManager.flush();
     final Optional<BeerOrder> beerOrderOptional =
         beerOrderRepository.findById(response.getOrderId());
 
@@ -51,6 +49,8 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
               response.isValid()
                   ? BeerOrderEventEnum.VALIDATION_PASSED
                   : BeerOrderEventEnum.VALIDATION_FAILED);
+
+          awaitForStatus(response.getOrderId(), BeerOrderStatusEnum.VALIDATED);
 
           if (response.isValid()) {
             sendEvent(
@@ -108,5 +108,43 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
             .setHeader(BeerOrderConstants.ORDER_ID_HEADER, order.getId().toString())
             .build();
     stateMachine.sendEvent(message);
+  }
+
+  private void awaitForStatus(UUID orderId, BeerOrderStatusEnum status) {
+
+    final AtomicBoolean found = new AtomicBoolean(false);
+    final AtomicInteger loopCount = new AtomicInteger(1);
+
+    while (!found.get()) {
+      if (loopCount.incrementAndGet() > 10) {
+        found.set(true);
+        log.debug("Loop retries exceeded");
+      }
+
+      beerOrderRepository
+          .findById(orderId)
+          .ifPresentOrElse(
+              beerOrder -> {
+                if (beerOrder.getOrderStatus() == status) {
+                  found.set(true);
+                  log.debug("Order found");
+                } else {
+                  log.debug(
+                      "Order status not equal. Expected: "
+                          + status.name()
+                          + " Found: "
+                          + beerOrder.getOrderStatus().name());
+                }
+              },
+              () -> log.debug("Order id not found"));
+      if (!found.get()) {
+        try {
+          log.debug("Sleeping for retry");
+          Thread.sleep(100);
+        } catch (Exception e) {
+
+        }
+      }
+    }
   }
 }
