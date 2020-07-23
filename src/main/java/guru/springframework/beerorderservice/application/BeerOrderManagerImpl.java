@@ -11,6 +11,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,9 +35,12 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     return order;
   }
 
+  private final EntityManager entityManager;
+
   @Transactional
   @Override
   public void handle(ValidateOrderResponse response) {
+    entityManager.flush();
     final Optional<BeerOrder> beerOrderOptional =
         beerOrderRepository.findById(response.getOrderId());
 
@@ -83,10 +87,17 @@ public class BeerOrderManagerImpl implements BeerOrderManager {
     final Optional<BeerOrder> orderOptional = beerOrderRepository.findById(id);
 
     orderOptional.ifPresentOrElse(
-        beerOrder -> {
-          sendEvent(beerOrder, BeerOrderEventEnum.BEERORDER_PICKED_UP);
-        },
+        beerOrder -> sendEvent(beerOrder, BeerOrderEventEnum.BEERORDER_PICKED_UP),
         () -> log.error("Order not found with id: " + id));
+  }
+
+  @Override
+  public void cancelOrder(UUID id) {
+    beerOrderRepository
+        .findById(id)
+        .ifPresentOrElse(
+            beerOrder -> sendEvent(beerOrder, BeerOrderEventEnum.CANCEL_ORDER),
+            () -> log.error("Order not found with id: " + id));
   }
 
   private void sendEvent(BeerOrder order, BeerOrderEventEnum event) {

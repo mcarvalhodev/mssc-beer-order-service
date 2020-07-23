@@ -18,19 +18,25 @@ public class BeerOrderAllocationListener {
   private final JmsTemplate jmsTemplate;
 
   @JmsListener(destination = JmsConfig.ALLOCATE_ORDER_QUEUE)
-  public void listen(Message message) {
+  public void listen(Message<AllocateOrderRequest> message) {
 
-    AllocateOrderRequest request = (AllocateOrderRequest) message.getPayload();
+    AllocateOrderRequest request = message.getPayload();
     boolean pendingInventory = false;
     boolean allocationError = false;
-    if (request.getOrder().getCustomerRef() != null
-        && request.getOrder().getCustomerRef().equals("partial-allocation")) {
-      pendingInventory = true;
+    boolean sendResponse = true;
+
+    if (request.getOrder().getCustomerRef() != null) {
+      if (request.getOrder().getCustomerRef().equals("fail-allocation")) {
+        allocationError = true;
+      }
+      if (request.getOrder().getCustomerRef().equals("dont-allocate")) {
+        sendResponse = false;
+      }
+      if (request.getOrder().getCustomerRef().equals("partial-allocation")) {
+        pendingInventory = true;
+      }
     }
-    if (request.getOrder().getCustomerRef() != null
-        && request.getOrder().getCustomerRef().equals("fail-allocation")) {
-      allocationError = true;
-    }
+
     boolean finalPendingInventory = pendingInventory;
     request
         .getOrder()
@@ -44,12 +50,14 @@ public class BeerOrderAllocationListener {
               }
             });
 
-    jmsTemplate.convertAndSend(
-        JmsConfig.ALLOCATE_ORDER_RESPONSE,
-        AllocateOrderResponse.builder()
-            .order(request.getOrder())
-            .pendingInventory(pendingInventory)
-            .allocationError(allocationError)
-            .build());
+    if (sendResponse) {
+      jmsTemplate.convertAndSend(
+          JmsConfig.ALLOCATE_ORDER_RESPONSE,
+          AllocateOrderResponse.builder()
+              .order(request.getOrder())
+              .pendingInventory(pendingInventory)
+              .allocationError(allocationError)
+              .build());
+    }
   }
 }

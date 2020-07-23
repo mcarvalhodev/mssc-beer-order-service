@@ -7,6 +7,7 @@ import com.github.jenspiegsa.wiremockextension.WireMockExtension;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import guru.springframework.beerorderservice.application.BeerOrderManager;
 import guru.springframework.beerorderservice.domain.event.AllocationFailedEvent;
+import guru.springframework.beerorderservice.domain.event.DeallocateOrderRequest;
 import guru.springframework.beerorderservice.domain.model.beer.BeerServiceImpl;
 import guru.springframework.beerorderservice.domain.model.customer.Customer;
 import guru.springframework.beerorderservice.domain.model.customer.CustomerRepository;
@@ -171,9 +172,10 @@ public class BeerOrderManagerIntegrationTest {
         get("http://localhost:8080" + BeerServiceImpl.BEER_UPC_PATH_V1 + "1234")
             .willReturn(okJson(objectMapper.writeValueAsString(beerDto))));
 
-    final BeerOrder order = beerOrderManager.create(newOne());
+    BeerOrder newly = newOne();
+    newly.setCustomerRef("fail-allocation");
 
-    order.setCustomerRef("fail-allocation");
+    final BeerOrder order = beerOrderManager.create(newly);
 
     await()
         .untilAsserted(
@@ -197,9 +199,10 @@ public class BeerOrderManagerIntegrationTest {
         get("http://localhost:8080" + BeerServiceImpl.BEER_UPC_PATH_V1 + "1234")
             .willReturn(okJson(objectMapper.writeValueAsString(beerDto))));
 
-    final BeerOrder order = beerOrderManager.create(newOne());
+    BeerOrder newly = newOne();
+    newly.setCustomerRef("partial-allocation");
 
-    order.setCustomerRef("partial-allocation");
+    final BeerOrder order = beerOrderManager.create(newly);
 
     await()
         .untilAsserted(
@@ -207,5 +210,96 @@ public class BeerOrderManagerIntegrationTest {
               final BeerOrder beerOrder = orderRepository.findById(order.getId()).get();
               assertEquals(BeerOrderStatusEnum.PENDING_INVENTORY, beerOrder.getOrderStatus());
             });
+  }
+
+  @Test
+  void testValidationPendingToCancel() throws JsonProcessingException {
+    final BeerDto beerDto = BeerDto.builder().id(beerId).upc(1234L).build();
+
+    wireMockServer.stubFor(
+        get("http://localhost:8080" + BeerServiceImpl.BEER_UPC_PATH_V1 + "1234")
+            .willReturn(okJson(objectMapper.writeValueAsString(beerDto))));
+
+    BeerOrder newly = newOne();
+    newly.setCustomerRef("dont-validate");
+    final BeerOrder order = beerOrderManager.create(newly);
+
+    await()
+        .untilAsserted(
+            () -> {
+              final BeerOrder beerOrder = orderRepository.findById(order.getId()).get();
+              assertEquals(BeerOrderStatusEnum.VALIDATION_PENDING, beerOrder.getOrderStatus());
+            });
+
+    beerOrderManager.cancelOrder(order.getId());
+
+    await()
+        .untilAsserted(
+            () -> {
+              final BeerOrder beerOrder = orderRepository.findById(order.getId()).get();
+              assertEquals(BeerOrderStatusEnum.CANCELLED, beerOrder.getOrderStatus());
+            });
+  }
+
+  @Test
+  void testAllocationPendingToCancel() throws JsonProcessingException {
+    final BeerDto beerDto = BeerDto.builder().id(beerId).upc(1234L).build();
+
+    wireMockServer.stubFor(
+        get("http://localhost:8080" + BeerServiceImpl.BEER_UPC_PATH_V1 + "1234")
+            .willReturn(okJson(objectMapper.writeValueAsString(beerDto))));
+
+    BeerOrder newly = newOne();
+    newly.setCustomerRef("dont-allocate");
+    final BeerOrder order = beerOrderManager.create(newly);
+
+    await()
+        .untilAsserted(
+            () -> {
+              final BeerOrder beerOrder = orderRepository.findById(order.getId()).get();
+              assertEquals(BeerOrderStatusEnum.ALLOCATION_PENDING, beerOrder.getOrderStatus());
+            });
+
+    beerOrderManager.cancelOrder(order.getId());
+
+    await()
+        .untilAsserted(
+            () -> {
+              final BeerOrder beerOrder = orderRepository.findById(order.getId()).get();
+              assertEquals(BeerOrderStatusEnum.CANCELLED, beerOrder.getOrderStatus());
+            });
+  }
+
+  @Test
+  void testAllocatedToCancel() throws JsonProcessingException {
+    final BeerDto beerDto = BeerDto.builder().id(beerId).upc(1234L).build();
+
+    wireMockServer.stubFor(
+        get("http://localhost:8080" + BeerServiceImpl.BEER_UPC_PATH_V1 + "1234")
+            .willReturn(okJson(objectMapper.writeValueAsString(beerDto))));
+
+    final BeerOrder order = beerOrderManager.create(newOne());
+
+    await()
+        .untilAsserted(
+            () -> {
+              final BeerOrder beerOrder = orderRepository.findById(order.getId()).get();
+              assertEquals(BeerOrderStatusEnum.ALLOCATED, beerOrder.getOrderStatus());
+            });
+
+    beerOrderManager.cancelOrder(order.getId());
+
+    await()
+        .untilAsserted(
+            () -> {
+              final BeerOrder beerOrder = orderRepository.findById(order.getId()).get();
+              assertEquals(BeerOrderStatusEnum.CANCELLED, beerOrder.getOrderStatus());
+            });
+
+    final DeallocateOrderRequest event =
+        (DeallocateOrderRequest) jms.receiveAndConvert(JmsConfig.DEALLOCATE_ORDER_QUEUE);
+
+    assertNotNull(event);
+    assertThat(event.getOrder().getId()).isEqualTo(order.getId());
   }
 }

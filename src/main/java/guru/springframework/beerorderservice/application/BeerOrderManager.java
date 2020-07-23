@@ -16,4 +16,6 @@ public interface BeerOrderManager {
   Consumer<AllocateOrderResponse> onAllocationResult();
 
   void beerOrderPickedUp(UUID id);
+
+  void cancelOrder(UUID id);
 }

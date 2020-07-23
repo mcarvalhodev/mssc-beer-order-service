@@ -10,8 +10,6 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
-import static org.springframework.util.StringUtils.hasLength;
-
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -24,14 +22,25 @@ public class BeerOrderValidationListener {
 
     final ValidateOrderRequest payload = message.getPayload();
 
-    final boolean isValid =
-        hasLength(payload.getOrder().getCustomerRef())
-                && payload.getOrder().getCustomerRef().equals("fail-validation")
-            ? false
-            : true;
+    boolean sendResponse = true;
 
-    jmsTemplate.convertAndSend(
-        JmsConfig.VALIDATE_ORDER_RESPONSE,
-        ValidateOrderResponse.builder().valid(isValid).orderId(payload.getOrder().getId()).build());
+    boolean isValid = true;
+
+    if (payload.getOrder().getCustomerRef() != null) {
+      if (payload.getOrder().getCustomerRef().equals("fail-validation")) {
+        isValid = false;
+      } else if (payload.getOrder().getCustomerRef().equals("dont-validate")) {
+        sendResponse = false;
+      }
+    }
+
+    if (sendResponse) {
+      jmsTemplate.convertAndSend(
+          JmsConfig.VALIDATE_ORDER_RESPONSE,
+          ValidateOrderResponse.builder()
+              .valid(isValid)
+              .orderId(payload.getOrder().getId())
+              .build());
+    }
   }
 }
