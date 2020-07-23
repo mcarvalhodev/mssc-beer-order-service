@@ -22,6 +22,7 @@ public class BeerOrderStateMachineConfig
   private final Action<BeerOrderStatusEnum, BeerOrderEventEnum> allocateOrder;
   private final Action<BeerOrderStatusEnum, BeerOrderEventEnum> validationFailure;
   private final Action<BeerOrderStatusEnum, BeerOrderEventEnum> allocationFailure;
+  private final Action<BeerOrderStatusEnum, BeerOrderEventEnum> deallocateOrder;
 
   @Override
   public void configure(StateMachineStateConfigurer<BeerOrderStatusEnum, BeerOrderEventEnum> states)
@@ -104,7 +105,7 @@ public class BeerOrderStateMachineConfig
         .withExternal()
         .source(BeerOrderStatusEnum.ALLOCATED)
         .target(BeerOrderStatusEnum.CANCELLED)
-        .event(BeerOrderEventEnum.CANCEL_ORDER);
-    // .action(deallocateOrderAction);
+        .event(BeerOrderEventEnum.CANCEL_ORDER)
+        .action(deallocateOrder);
   }
 }
