@@ -12,5 +12,6 @@ public enum BeerOrderStatusEnum {
   PICKED_UP,
   DELIVERED,
   DELIVERY_EXCEPTION,
-    CANCELLED, READY
+  CANCELLED,
+  READY
 }
